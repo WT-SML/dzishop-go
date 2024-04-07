@@ -4,7 +4,7 @@ import 'virtual:uno.css'
 import 'virtual:unocss-devtools'
 
 // 你自定义的 css
-import './styles/main.css'
+import './styles/main.scss'
 
 import App from './App.vue'
 

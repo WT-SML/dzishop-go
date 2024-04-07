@@ -1,7 +1,11 @@
+<script setup lang="ts">
+import titleBar from '~/components/title-bar.vue'
+</script>
 <template>
-	<Navigation />
-	<div class="w-screen flex flex-col items-center justify-center">
-		<router-view v-slot="{ Component }">
+	<div class="h-100vh flex flex-col">
+		<!-- 标题栏 -->
+		<titleBar class="flex-shrink-0" />
+		<router-view v-slot="{ Component }" class="flex-grow">
 			<transition name="fade" mode="out-in">
 				<component :is="Component" />
 			</transition>

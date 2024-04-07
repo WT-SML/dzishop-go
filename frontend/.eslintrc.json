@@ -13,7 +13,9 @@
       "jsx": true // 启用 jsx
     }
   },
-  "plugins": ["prettier"],
+  "plugins": [
+    "prettier"
+  ],
   "extends": [
     "@unocss",
     "eslint:recommended", // 内置规则
@@ -22,6 +24,8 @@
     "./presets/eslint/.eslintrc-auto-import.json"
   ],
   "rules": {
+    "no-unused-vars": "off",
+    "vue/no-unused-vars": "off",
     // 允许相同组件名
     "vue/multi-word-component-names": "off",
     // prettier 作为规则
