@@ -9,12 +9,13 @@ import path from 'path'
 import fs from 'fs'
 import { compare } from '@/tools'
 import { Folder, FileTrayFull } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
+import { NIcon, c } from 'naive-ui'
 import { useMagicKeys, useStorage } from '@vueuse/core'
 import os from 'os'
 import { open } from '@tauri-apps/api/dialog'
 import { readDir, BaseDirectory } from '@tauri-apps/api/fs'
 import { invoke } from '@tauri-apps/api/tauri'
+import { SelectFolder } from "../../wailsjs/go/main/App";
 
 // 本地缓存
 // const storage = require('electron-json-storage')
@@ -179,16 +180,18 @@ const websiteAddressSubmit = () => {
 
 // 点击打开文件夹按钮
 const openFolder = async () => {
-	const folderPath = await open({
-		directory: true,
-	})
-	if (!folderPath) return
-	const ret = await getDirectoryItem(folderPath)
-	if (state.folderList.map((item) => item.key).includes(ret.key)) {
-		return
-	}
-	state.folderList[0] = ret
-	state.defaultExpandedKeys = [ret.key]
+	const res = await SelectFolder()
+	console.log(res)
+	// const folderPath = await open({
+	// 	directory: true,
+	// })
+	// if (!folderPath) return
+	// const ret = await getDirectoryItem(folderPath)
+	// if (state.folderList.map((item) => item.key).includes(ret.key)) {
+	// 	return
+	// }
+	// state.folderList[0] = ret
+	// state.defaultExpandedKeys = [ret.key]
 }
 // 获取一个目录下的项目
 const getDirectoryItem = async (dirPath) => {

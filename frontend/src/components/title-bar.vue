@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// @ts-nocheck
 import { isDark, toggleDark } from 'vue-dark-switch'
 import logo from '~/assets/imgs/logo.png'
 import { appWindow } from '@tauri-apps/api/window'
@@ -199,12 +200,15 @@ const renderLabel = (option) => {
 		],
 	)
 }
+
+const runtime = window.runtime
 </script>
 
 <template>
 	<div
 		:class="`h-35px bg-[#${isDark ? '21252B' : 'F8F8F8'}] flex justify-between select-none titlebar`"
 		style="--wails-draggable: drag"
+		@dblclick="runtime.WindowToggleMaximise"
 	>
 		<div class="h-full flex items-center pl-3">
 			<img :src="logo" class="mb-2px mr-5 w-18px" />
@@ -230,19 +234,19 @@ const renderLabel = (option) => {
 		<div :class="`${isDark ? 'text-[#C5C5C5]' : 'text-[#333639]'}`">
 			<div
 				:class="`titlebar-button hover:${isDark ? 'bg-[#40444A]' : 'bg-[#D7D7D7]'}`"
-				@click="appWindow.minimize()"
+				@click="runtime.WindowMinimise()"
 			>
 				<div :class="`i-mdi:window-minimize `"></div>
 			</div>
 			<div
 				:class="`titlebar-button hover:${isDark ? 'bg-[#40444A]' : 'bg-[#D7D7D7]'}`"
-				@click="appWindow.toggleMaximize()"
+				@click="runtime.WindowToggleMaximise()"
 			>
 				<div :class="`i-mdi:window-maximize `"></div>
 			</div>
 			<div
 				class="titlebar-button hover:bg-[#E81123] hover:text-[#fff]"
-				@click="appWindow.close()"
+				@click="runtime.Quit()"
 			>
 				<div :class="`i-mdi:window-close`"></div>
 			</div>
