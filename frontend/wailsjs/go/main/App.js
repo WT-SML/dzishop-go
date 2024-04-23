@@ -6,6 +6,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
-export function SelectFolder() {
-  return window['go']['main']['App']['SelectFolder']();
+export function WailsGetDirectoryItem(arg1) {
+  return window['go']['main']['App']['WailsGetDirectoryItem'](arg1);
+}
+
+export function WailsSelectFolder() {
+  return window['go']['main']['App']['WailsSelectFolder']();
 }

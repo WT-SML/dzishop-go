@@ -7,7 +7,7 @@ import _ from 'lodash'
 import { SUPPORT_FILE_TYPES } from '@/constants'
 import path from 'path'
 import fs from 'fs'
-import { compare } from '@/tools'
+import { compare, p, isChineseCharacter } from '@/tools'
 import { Folder, FileTrayFull } from '@vicons/ionicons5'
 import { NIcon, c } from 'naive-ui'
 import { useMagicKeys, useStorage } from '@vueuse/core'
@@ -15,7 +15,10 @@ import os from 'os'
 import { open } from '@tauri-apps/api/dialog'
 import { readDir, BaseDirectory } from '@tauri-apps/api/fs'
 import { invoke } from '@tauri-apps/api/tauri'
-import { SelectFolder } from "../../wailsjs/go/main/App";
+import {
+	WailsGetDirectoryItem,
+	WailsSelectFolder,
+} from '../../wailsjs/go/main/App'
 
 // 本地缓存
 // const storage = require('electron-json-storage')
@@ -177,51 +180,72 @@ const websiteAddressSubmit = () => {
 	syncActiveTabToRsourceManager()
 	state.websiteAddressModal.isModalShow = false
 }
-
 // 点击打开文件夹按钮
 const openFolder = async () => {
-	const res = await SelectFolder()
-	console.log(res)
-	// const folderPath = await open({
-	// 	directory: true,
-	// })
-	// if (!folderPath) return
-	// const ret = await getDirectoryItem(folderPath)
-	// if (state.folderList.map((item) => item.key).includes(ret.key)) {
-	// 	return
-	// }
-	// state.folderList[0] = ret
-	// state.defaultExpandedKeys = [ret.key]
+	const folderPath = await WailsSelectFolder()
+	if (!folderPath) return
+	const ret = await getDirectoryItem(folderPath)
+	if (state.folderList.map((item) => item.key).includes(ret.key)) {
+		return
+	}
+	state.folderList[0] = ret
+	state.defaultExpandedKeys = [ret.key]
 }
 // 获取一个目录下的项目
 const getDirectoryItem = async (dirPath) => {
-	const res = await invoke('get_directory_item', { dirPath })
-	console.log(res)
-	return {}
-	// const entries = await readDir(dirPath, {
-	// 	dir: BaseDirectory.AppData,
-	// 	recursive: false,
-	// })
-	// for (let entry of entries) {
-	// 	entry.type = entry.children ? 'directory' : 'file'
-	// 	entry.label = entry.name
-	// 	entry.key = entry.path
-	// 	entry.isLeaf = !entry.children
-	// 	if (entry.children !== undefined) {
-	// 		delete entry.children
-	// 	}
-	// }
-	// const name = dirPath.split('\\').at(-1)
-	// const ret = {
-	// 	name: name,
-	// 	path: dirPath,
-	// 	children: entries,
-	// 	type: 'directory',
-	// 	label: name,
-	// 	key: dirPath,
-	// 	isLeaf: false,
-	// }
-	// return ret
+	console.log(dirPath)
+	let entries = p(await WailsGetDirectoryItem(dirPath))
+	for (const v of entries) {
+		if (!v.isLeaf) {
+			v.children = null
+		}
+	}
+	// 排序
+	// 文件夹
+	const dirs = entries.filter((item) => !item.isLeaf)
+	// 文件夹-汉字
+	const dirsChinese = dirs
+		.filter((item) => isChineseCharacter(item.label[0]))
+		.sort(compare('label', 1, true))
+	// 文件夹-非汉字
+	const dirsNotChinese = dirs
+		.filter((item) => !isChineseCharacter(item.label[0]))
+		// .sort(compare('label', 1, true))
+	// 文件
+	const files = entries.filter((item) => item.isLeaf)
+	// 文件-汉字
+	const filesChinese = files
+		.filter((item) => isChineseCharacter(item.label[0]))
+		// .sort(compare('label', 1, true))
+	// 文件夹-非汉字
+	const filesNotChinese = files
+		.filter((item) => !isChineseCharacter(item.label[0]))
+		// .sort(compare('label', 1, true))
+
+	console.log(dirsChinese)
+	entries = [
+		// 文件夹
+		...[
+			// 文件夹-汉字
+			...dirsChinese,
+			// 文件夹-非汉字
+			...dirsNotChinese,
+		],
+		...[
+			// 文件-汉字
+			...filesChinese,
+			// 文件-非汉字
+			...filesNotChinese,
+		],
+	]
+	const label = dirPath.split('\\').at(-1)
+	const ret = {
+		label,
+		key: dirPath,
+		children: entries,
+		isLeaf: false,
+	}
+	return ret
 }
 // label渲染
 const renderLabel = ({ option }) => {
@@ -240,7 +264,7 @@ const renderLabel = ({ option }) => {
 }
 // 前置图标渲染
 const renderPrefix = ({ option }) => {
-	return option.type === 'directory'
+	return !option.isLeaf
 		? null
 		: h('div', {
 				className: 'i-ic:round-insert-drive-file ml--11px',
@@ -248,23 +272,21 @@ const renderPrefix = ({ option }) => {
 }
 // 处理节点加载
 const handleNodeLoad = (node) => {
-	console.log(node)
+	console.log(1)
 	return new Promise((resolve) => {
 		setTimeout(async () => {
-			console.log(node.key)
-			console.log(await getDirectoryItem(node.key))
-			node.children = []
+			console.log(await getDirectoryItem(node.key).children)
 			// node.children = await getDirectoryItem(node.key).children
+			node.children = []
 			resolve()
-		}, 0)
+		}, 500)
 	})
 }
 // 处理节点选中项发生变化
 const handleSelectedKeysUpdate = (keys, option, meta) => {
 	const target = option[0]
 	const key = target.key
-	const isDirectory = !target.isLeaf
-	if (isDirectory) {
+	if (!target.isLeaf) {
 		return
 	}
 	if (state.tabs.map((item) => item.key).includes(key)) {
@@ -273,7 +295,7 @@ const handleSelectedKeysUpdate = (keys, option, meta) => {
 	}
 	state.tabs.push({
 		key,
-		label: target.name,
+		label: target.label,
 	})
 	state.activeTabKey = key
 }

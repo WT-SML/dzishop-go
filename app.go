@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
-	"io/fs"
 	"os"
+	"path/filepath"
+
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -31,26 +33,33 @@ func (a *App) Greet(name string) string {
 
 // 选择文件夹
 type File struct {
-	name     string
-	isDir    bool
-	fileType fs.FileMode
-	fileInfo fs.FileInfo
+	Label  string `json:"label"`
+	Key    string `json:"key"`
+	IsLeaf bool   `json:"isLeaf"`
 }
 
-func (a *App) SelectFolder() []File {
+func (a *App) WailsSelectFolder() string {
 	result, err := runtime.OpenDirectoryDialog(a.ctx, runtime.OpenDialogOptions{})
 	if err != nil {
 		panic(err)
 	}
-	files, err := os.ReadDir(result)
+	return result
+}
+func (a *App) WailsGetDirectoryItem(dir string) string {
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		panic(err)
 	}
-	ret := make([]File, len(files))
+	ret := make([]File, 0)
 	for _, v := range files {
-		fileInfo, _ := v.Info()
-		ret = append(ret, File{name: v.Name(), isDir: v.IsDir(), fileType: v.Type(), fileInfo: fileInfo})
+		file := File{Label: v.Name(), Key: filepath.Join(dir, v.Name()), IsLeaf: !v.IsDir()}
+		fmt.Println(file)
+		ret = append(ret, file)
 	}
-	println(ret)
-	return ret
+	jsonData, err := json.Marshal(ret)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(jsonData))
+	return string(jsonData)
 }

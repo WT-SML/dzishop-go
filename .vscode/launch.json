@@ -2,11 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Wails: Dev",
-      "command": "wails dev",
-      "type": "node-terminal",
+      "name": "Wails: Debug dzishop-go",
+      "type": "go",
       "request": "launch",
-      "preLaunchTask": "build",
+      "mode": "debug",
+      "program": "${workspaceFolder}/main.go",
       "cwd": "${workspaceFolder}",
       "env": {}
     }

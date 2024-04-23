@@ -1,0 +1,16 @@
+lockfileVersion: '6.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+dependencies:
+  pinyin-pro:
+    specifier: ^3.20.2
+    version: 3.20.2
+
+packages:
+
+  /pinyin-pro@3.20.2:
+    resolution: {integrity: sha512-i+qJ+f8lmIxITL/0V2HorGlUfPwHJ/b4DDWh5SlN5lVC8g1lfKWDRjdWUOsY373J4il8gH0IfiYwPtRha49ITw==}
+    dev: false
