@@ -29,8 +29,9 @@ import zlib
 
 from PIL import ImageCms
 from flask import Flask, abort, make_response, render_template, url_for
+from flask_cors import CORS
 
-OPENSLIDE_PATH = r'D:\openslide-win64-20230414\bin'
+OPENSLIDE_PATH = r'D:\openslide-bin-4.0.0.2+20240422.nightly-windows-x64\bin'
 
 if hasattr(os, 'add_dll_directory'):
   # Windows
@@ -63,6 +64,8 @@ SRGB_PROFILE = ImageCms.getOpenProfile(BytesIO(SRGB_PROFILE_BYTES))
 def create_app(config=None, config_file=None):
   # Create and configure app
   app = Flask(__name__)
+  # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
+  CORS(app, resources=r'/*')
   app.config.from_mapping(
     SLIDE_DIR='.',
     SLIDE_CACHE_SIZE=10,

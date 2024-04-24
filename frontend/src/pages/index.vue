@@ -1,28 +1,46 @@
 <script setup lang="ts">
-// @ts-nocheck
-// import { Titlebar, TitlebarColor } from 'custom-electron-titlebar'
-// import { ipcRenderer } from 'electron'
-import { isDark, toggleDark } from 'vue-dark-switch'
+import { isDark } from 'vue-dark-switch'
 import _ from 'lodash'
 import { SUPPORT_FILE_TYPES } from '@/constants'
-import path from 'path'
-import fs from 'fs'
-import { compare, p, isChineseCharacter } from '@/tools'
-import { Folder, FileTrayFull } from '@vicons/ionicons5'
-import { NIcon, c } from 'naive-ui'
-import { useMagicKeys, useStorage } from '@vueuse/core'
-import os from 'os'
-import { open } from '@tauri-apps/api/dialog'
-import { readDir, BaseDirectory } from '@tauri-apps/api/fs'
-import { invoke } from '@tauri-apps/api/tauri'
+import { sortByKey, p, isChineseCharacter, isNumber } from '@/tools'
+import { useMagicKeys } from '@vueuse/core'
 import {
 	WailsGetDirectoryItem,
 	WailsSelectFolder,
 } from '../../wailsjs/go/main/App'
+import emitter from '~/tools/emitter'
+import {
+	MENU_OPEN_FILE,
+	MENU_OPEN_DIR,
+	MENU_OPEN_URL,
+} from '~/constants/evt-name'
+import { pinyin } from 'pinyin-pro'
 
-// 本地缓存
-// const storage = require('electron-json-storage')
-// storage.setDataPath(os.tmpdir())
+// 打开文件
+emitter.on(MENU_OPEN_FILE, () => {
+	// for (const filePath of filePaths) {
+	// 	if (state.tabs.map((item) => item.key).includes(filePath)) {
+	// 		state.activeTabKey = filePath
+	// 		syncActiveTabToRsourceManager()
+	// 		return
+	// 	}
+	// 	state.tabs.push({
+	// 		key: filePath,
+	// 		label: path.basename(filePath),
+	// 	})
+	// 	state.activeTabKey = filePath
+	// 	syncActiveTabToRsourceManager()
+	// }
+})
+// 打开文件夹
+emitter.on(MENU_OPEN_DIR, () => {
+	openFolder()
+})
+// 打开网络地址
+emitter.on(MENU_OPEN_URL, () => {
+	state.websiteAddressModal.websiteAddress = null
+	state.websiteAddressModal.isModalShow = true
+})
 
 // 拖放的Dom引用
 const tabsRef = ref(null)
@@ -42,61 +60,6 @@ watch(CtrlW, (v) => {
 const lightThemeColor = '#f8f8f8'
 const darkThemeColor = '#282c34'
 const frameSizeSettingRef = ref(null)
-// ipcRenderer.send('theme-initiated', isDark.value)
-// const titlebar = new Titlebar({
-// 	backgroundColor: TitlebarColor.fromHex(
-// 		isDark.value ? darkThemeColor : lightThemeColor,
-// 	),
-// 	containerOverflow: 'hidden',
-// })
-// // 更新菜单栏北京颜色
-// const updateTitlebarBackgroundColor = () => {
-// 	titlebar.updateBackground(
-// 		TitlebarColor.fromHex(isDark.value ? darkThemeColor : lightThemeColor),
-// 	)
-// }
-// // 切换主题
-// ipcRenderer.on('theme-change', (e, data) => {
-// 	// 浅色模式
-// 	if (data === 0) {
-// 		toggleDark(false)
-// 		updateTitlebarBackgroundColor()
-// 	} else if (data === 1) {
-// 		// 深色模式
-// 		toggleDark(true)
-// 		updateTitlebarBackgroundColor()
-// 	}
-// })
-// // 打开文件
-// ipcRenderer.on('open-file', (e, filePaths) => {
-// 	for (const filePath of filePaths) {
-// 		if (state.tabs.map((item) => item.key).includes(filePath)) {
-// 			state.activeTabKey = filePath
-// 			syncActiveTabToRsourceManager()
-// 			return
-// 		}
-// 		state.tabs.push({
-// 			key: filePath,
-// 			label: path.basename(filePath),
-// 		})
-// 		state.activeTabKey = filePath
-// 		syncActiveTabToRsourceManager()
-// 	}
-// })
-// // 打开文件夹
-// ipcRenderer.on('open-folder', (e, folderPath) => {
-// 	const ret = getDirectoryItem(folderPath)
-// 	if (state.folderList.map((item) => item.key).includes(ret.key)) {
-// 		return
-// 	}
-// 	state.folderList[0] = ret
-// 	state.defaultExpandedKeys = [ret.key]
-// })
-// // 打开网络地址
-// ipcRenderer.on('open-website-address', () => {
-// 	state.websiteAddressModal.websiteAddress = null
-// 	state.websiteAddressModal.isModalShow = true
-// })
 // 资源管理器面板宽度
 const compotedResourceManagerPanelWidth = computed(() => {
 	return `${state.resourceManagerPanelWidth}px`
@@ -185,17 +148,17 @@ const openFolder = async () => {
 	const folderPath = await WailsSelectFolder()
 	if (!folderPath) return
 	const ret = await getDirectoryItem(folderPath)
-	if (state.folderList.map((item) => item.key).includes(ret.key)) {
-		return
-	}
 	state.folderList[0] = ret
 	state.defaultExpandedKeys = [ret.key]
 }
 // 获取一个目录下的项目
 const getDirectoryItem = async (dirPath) => {
-	console.log(dirPath)
 	let entries = p(await WailsGetDirectoryItem(dirPath))
 	for (const v of entries) {
+		const firstChar = v.label[0].toLocaleLowerCase()
+		v.sortField = isChineseCharacter(firstChar)
+			? pinyin(firstChar)[0]
+			: firstChar
 		if (!v.isLeaf) {
 			v.children = null
 		}
@@ -203,39 +166,47 @@ const getDirectoryItem = async (dirPath) => {
 	// 排序
 	// 文件夹
 	const dirs = entries.filter((item) => !item.isLeaf)
+	// 文件夹-数字
+	const dirsNumber = dirs.filter((item) => isNumber(item.label[0]))
+	sortByKey(dirsNumber, 'sortField')
 	// 文件夹-汉字
-	const dirsChinese = dirs
-		.filter((item) => isChineseCharacter(item.label[0]))
-		.sort(compare('label', 1, true))
-	// 文件夹-非汉字
-	const dirsNotChinese = dirs
-		.filter((item) => !isChineseCharacter(item.label[0]))
-		// .sort(compare('label', 1, true))
+	const dirsChinese = dirs.filter((item) => isChineseCharacter(item.label[0]))
+	sortByKey(dirsChinese, 'sortField')
+	// 文件夹-非数字汉字
+	const dirsNotChineseOrNumber = dirs.filter(
+		(item) => !isChineseCharacter(item.label[0]) && !isNumber(item.label[0]),
+	)
+	sortByKey(dirsNotChineseOrNumber, 'sortField')
 	// 文件
 	const files = entries.filter((item) => item.isLeaf)
+	// 文件-数字
+	const filesNumber = files.filter((item) => isNumber(item.label[0]))
+	sortByKey(filesNumber, 'sortField')
 	// 文件-汉字
-	const filesChinese = files
-		.filter((item) => isChineseCharacter(item.label[0]))
-		// .sort(compare('label', 1, true))
-	// 文件夹-非汉字
-	const filesNotChinese = files
-		.filter((item) => !isChineseCharacter(item.label[0]))
-		// .sort(compare('label', 1, true))
-
-	console.log(dirsChinese)
+	const filesChinese = files.filter((item) => isChineseCharacter(item.label[0]))
+	sortByKey(filesChinese, 'sortField')
+	// 文件夹-非数字汉字
+	const filesNotChineseOrNumber = files.filter(
+		(item) => !isChineseCharacter(item.label[0]) && !isNumber(item.label[0]),
+	)
+	sortByKey(filesNotChineseOrNumber, 'sortField')
 	entries = [
 		// 文件夹
 		...[
+			// 文件夹-数字
+			...dirsNumber,
 			// 文件夹-汉字
 			...dirsChinese,
-			// 文件夹-非汉字
-			...dirsNotChinese,
+			// 文件夹-非数字汉字
+			...dirsNotChineseOrNumber,
 		],
 		...[
+			// 文件-数字
+			...filesNumber,
 			// 文件-汉字
 			...filesChinese,
 			// 文件-非汉字
-			...filesNotChinese,
+			...filesNotChineseOrNumber,
 		],
 	]
 	const label = dirPath.split('\\').at(-1)
@@ -272,14 +243,11 @@ const renderPrefix = ({ option }) => {
 }
 // 处理节点加载
 const handleNodeLoad = (node) => {
-	console.log(1)
-	return new Promise((resolve) => {
+	return new Promise<void>((resolve) => {
 		setTimeout(async () => {
-			console.log(await getDirectoryItem(node.key).children)
-			// node.children = await getDirectoryItem(node.key).children
-			node.children = []
+			node.children = (await getDirectoryItem(node.key)).children
 			resolve()
-		}, 500)
+		}, 0)
 	})
 }
 // 处理节点选中项发生变化
@@ -333,25 +301,24 @@ onMounted(async () => {
 	})
 	// 处理文件拖放事件
 	tabsRef.value.addEventListener('drop', (e) => {
-		console.log(1)
 		e.preventDefault()
 		const files = e.dataTransfer.files
 		// 处理拖放的文件
-		for (const file of files) {
-			if (file.path) {
-				if (state.tabs.map((item) => item.key).includes(file.path)) {
-					state.activeTabKey = file.path
-					syncActiveTabToRsourceManager()
-					return
-				}
-				state.tabs.push({
-					key: file.path,
-					label: path.basename(file.path),
-				})
-				state.activeTabKey = file.path
-				syncActiveTabToRsourceManager()
-			}
-		}
+		// for (const file of files) {
+		// 	if (file.path) {
+		// 		if (state.tabs.map((item) => item.key).includes(file.path)) {
+		// 			state.activeTabKey = file.path
+		// 			syncActiveTabToRsourceManager()
+		// 			return
+		// 		}
+		// 		state.tabs.push({
+		// 			key: file.path,
+		// 			label: path.basename(file.path),
+		// 		})
+		// 		state.activeTabKey = file.path
+		// 		syncActiveTabToRsourceManager()
+		// 	}
+		// }
 	})
 })
 </script>
@@ -418,6 +385,7 @@ onMounted(async () => {
 				:class="`tabs flex-grow h-full select-none overflow-hidden ${
 					isDark ? '' : 'border-t border-l border-[#dfdfdf]'
 				}`"
+				:style="{ backgroundColor: isDark ? '#23272E' : '#fff' }"
 			>
 				<div
 					v-if="!state.tabs.length"
@@ -517,6 +485,7 @@ onMounted(async () => {
 			style="width: 600px"
 			title="打开网络地址"
 			:mask-closable="false"
+			:auto-focus="false"
 		>
 			<div>
 				<n-input
@@ -575,6 +544,11 @@ onMounted(async () => {
 				.n-tree-node {
 					border-radius: 0;
 					align-items: center;
+					.n-tree-node-indent {
+						div {
+							width: 14px !important;
+						}
+					}
 					.n-tree-node-switcher {
 						width: 16px !important;
 						height: 16px;

@@ -53,13 +53,11 @@ func (a *App) WailsGetDirectoryItem(dir string) string {
 	ret := make([]File, 0)
 	for _, v := range files {
 		file := File{Label: v.Name(), Key: filepath.Join(dir, v.Name()), IsLeaf: !v.IsDir()}
-		fmt.Println(file)
 		ret = append(ret, file)
 	}
 	jsonData, err := json.Marshal(ret)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(string(jsonData))
 	return string(jsonData)
 }

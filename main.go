@@ -16,7 +16,7 @@ var assets embed.FS
 
 func main() {
 	// 调用 deepzoom server 服务
-	relativePath := "./dzi-server/dist/main.exe"
+	relativePath := "./dzi-server/dist/dzi-server.exe"
 	absPath, absPathErr := filepath.Abs(relativePath)
 	if absPathErr != nil {
 		panic(absPathErr)

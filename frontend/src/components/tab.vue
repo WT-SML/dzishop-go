@@ -96,7 +96,9 @@ onMounted(async () => {
 	const getNavigatorSize = () =>
 		new Promise((resolve, reject) => {
 			const img = new Image()
-			img.src = `${VITE_APP_SERVER}/${props.filePath}_files/8/0_0.jpeg`
+			img.src = props.isWebsiteAddress
+				? props.filePath.replace('.dzi', '_files/8/0_0.jpg')
+				: `${VITE_APP_SERVER}/${props.filePath}_files/8/0_0.jpeg`
 			img.onload = () => {
 				resolve({
 					width: img.width,
@@ -150,7 +152,7 @@ onMounted(async () => {
 		// 返回的 painter 是该 vue 组件的组件实例，你可以访问该组件实例上的 props、refs 等属性，当然，我也把该组件的 state 暴露给了你，以供你灵活的进行开发
 		state.painter = initPainter(painterConf)
 		watch(
-			() => state.painter.dziCoordByMouse,
+			() => state.painter.debug.dziCoordByMouse,
 			(newVal) => {
 				emits('coordUpdate', newVal)
 			},
@@ -182,12 +184,22 @@ defineExpose({
 			class="h-full w-full flex items-center justify-center"
 		>
 			<div class="i-ion:ios-warning mr-2"></div>
-			不支持的文件类型
+			<div>不支持的文件类型</div>
+			<div>（支持文件格式：{{ SUPPORT_FILE_TYPES.join(' | ') }}）</div>
 		</div>
 		<div v-else class="h-full w-full flex">
 			<!-- osd 画布 -->
-
-			<div ref="osdRef" class="osd flex-grow"></div>
+			<div
+				ref="osdRef"
+				class="osd flex-grow"
+				:style="
+					state.painter?.state.mode === state.painter?.state.tools.MOVE
+						? state.painter?.debug.isLeftMousePressed.value
+							? 'cursor:grabbing'
+							: 'cursor:grab'
+						: ''
+				"
+			></div>
 			<!-- 标注列表 -->
 			<div
 				v-if="state.shapes.length"

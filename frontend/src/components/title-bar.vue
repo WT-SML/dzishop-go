@@ -1,9 +1,16 @@
 <script setup lang="ts">
-// @ts-nocheck
 import { isDark, toggleDark } from 'vue-dark-switch'
 import logo from '~/assets/imgs/logo.png'
-import { appWindow } from '@tauri-apps/api/window'
 import { NRadio } from 'naive-ui'
+import emitter from '~/tools/emitter'
+import {
+	MENU_OPEN_DIR,
+	MENU_OPEN_URL,
+	MENU_OPEN_FILE,
+	MENU_EXPORT,
+} from '~/constants/evt-name'
+
+const keys = useMagicKeys()
 
 const menu = [
 	{
@@ -14,25 +21,33 @@ const menu = [
 				label: '打开文件...',
 				key: '打开文件...',
 				accelerator: 'Ctrl+O',
-				onClick: () => {},
+				onClick: () => {
+					emitter.emit(MENU_OPEN_FILE)
+				},
 			},
 			{
 				label: '打开文件夹...',
 				key: '打开文件夹...',
 				accelerator: '',
-				onClick: () => {},
+				onClick: () => {
+					emitter.emit(MENU_OPEN_DIR)
+				},
 			},
 			{
 				label: '打开网络地址...',
 				key: '打开网络地址...',
 				accelerator: '',
-				onClick: () => {},
+				onClick: () => {
+					emitter.emit(MENU_OPEN_URL)
+				},
 			},
 			{
 				label: '导出',
 				key: '导出',
 				accelerator: '',
-				onClick: () => {},
+				onClick: () => {
+					emitter.emit(MENU_EXPORT)
+				},
 			},
 			{
 				label: '设置',
@@ -46,7 +61,7 @@ const menu = [
 				key: '退出',
 				accelerator: '',
 				onClick: () => {
-					appWindow.close()
+					runtime.Quit()
 				},
 			},
 		],
@@ -59,53 +74,37 @@ const menu = [
 				label: '刷新',
 				key: '刷新',
 				accelerator: 'F5',
-				onClick: () => {},
+				onClick: () => {
+					location.reload()
+				},
 			},
-			{
-				label: '强制刷新',
-				key: '强制刷新',
-				accelerator: 'Ctrl+F5',
-				onClick: () => {},
-			},
-
-			{ type: 'divider' },
-			{
-				label: '切换全屏',
-				key: '切换全屏',
-				accelerator: 'F11',
-				onClick: () => {},
-			},
-			{ type: 'divider' },
-			{
-				label: '实际大小',
-				key: '实际大小',
-				accelerator: 'Ctrl+0',
-				role: 'resetzoom',
-				onClick: () => {},
-			},
-			{
-				label: '放大',
-				key: '放大',
-				accelerator: 'Ctrl+=',
-				role: 'zoomin',
-				onClick: () => {},
-			},
-			{
-				label: '缩小',
-				key: '缩小',
-				accelerator: 'Ctrl+-',
-				role: 'zoomout',
-				onClick: () => {},
-			},
-
-			{ type: 'divider' },
-			{
-				label: '开发者工具',
-				key: '开发者工具',
-				role: 'toggledevtools',
-				accelerator: 'F12',
-				onClick: () => {},
-			},
+			// { type: 'divider' },
+			// {
+			// 	label: '实际大小',
+			// 	key: '实际大小',
+			// 	accelerator: 'Ctrl+0',
+			// 	onClick: () => {},
+			// },
+			// {
+			// 	label: '放大',
+			// 	key: '放大',
+			// 	accelerator: 'Ctrl+=',
+			// 	onClick: () => {},
+			// },
+			// {
+			// 	label: '缩小',
+			// 	key: '缩小',
+			// 	accelerator: 'Ctrl+Minus',
+			// 	acceleratorAlias: 'Ctrl+-',
+			// 	onClick: () => {},
+			// },
+			// { type: 'divider' },
+			// {
+			// 	label: '开发者工具',
+			// 	key: '开发者工具',
+			// 	accelerator: 'F12',
+			// 	onClick: () => {},
+			// },
 		],
 	},
 	{
@@ -149,20 +148,10 @@ const menu = [
 				key: '更新日志',
 				onClick: () => {},
 			},
-			{
-				label: '隐私条款',
-				key: '隐私条款',
-				onClick: () => {},
-			},
 			{ type: 'divider' },
 			{
 				label: '检查更新...',
 				key: '检查更新...',
-				onClick: () => {},
-			},
-			{
-				label: '查看许可证...',
-				key: '查看许可证...',
 				onClick: () => {},
 			},
 			{
@@ -173,6 +162,7 @@ const menu = [
 		],
 	},
 ]
+
 // 处理下拉菜单
 const handleMenuSelect = (key, option) => {
 	option?.onClick()
@@ -195,13 +185,30 @@ const renderLabel = (option) => {
 					)
 				: h('span', option.label),
 			option.accelerator
-				? h('span', { className: 'ml-10' }, option.accelerator)
+				? h(
+						'span',
+						{ className: 'ml-10' },
+						option.acceleratorAlias || option.accelerator,
+					)
 				: null,
 		],
 	)
 }
-
+// @ts-ignore
 const runtime = window.runtime
+// 监听快捷键
+const listenShortcut = () => {
+	const menuItems: any = menu.map((item) => item.submenu).flat()
+	for (const v of menuItems) {
+		if (!v.accelerator) continue
+		whenever(keys[v.accelerator], () => {
+			v.onClick()
+		})
+	}
+}
+onMounted(() => {
+	listenShortcut()
+})
 </script>
 
 <template>
@@ -261,6 +268,7 @@ const runtime = window.runtime
 		display: inline-block;
 		padding: 3px 6px;
 		border-radius: 4px;
+		cursor: pointer;
 	}
 	.titlebar-button {
 		display: inline-flex;
@@ -268,6 +276,7 @@ const runtime = window.runtime
 		align-items: center;
 		width: 35px;
 		height: 35px;
+		cursor: pointer;
 	}
 }
 </style>

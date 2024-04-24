@@ -1,39 +1,21 @@
-import { pinyin } from 'pinyin-pro';
-
 /**
- * 比较函数
+ * 对数组按key排序
  * @author Ash
- * @param {String} propertyName 比较的字段
- * @param {Boolean} isAscending 是否升序
+ * @param {Array} array 数组
+ * @param {String} key key
+ * @param {String} ascending 是否升序
  * @return {Number}
  */
-export const compare = (propertyName, isAscending = 0, isFilename = false) => {
-    if (isAscending === undefined) {
-        isAscending = 1
-    } else {
-        isAscending = isAscending ? 1 : -1
-    }
-    return function (obj1, obj2) {
-        let value1, value2
-        if (isFilename) {
-            let char1 = obj1[propertyName][0].toLocaleLowerCase()
-            let char2 = obj1[propertyName][0].toLocaleLowerCase()
-            value1 = isChineseCharacter(char1) ? pinyin(char1)[0] : char1
-            value2 = isChineseCharacter(char2) ? pinyin(char2)[0] : char2
-            console.log(value1)
-            console.log(value2)
-        } else {
-            value1 = obj1[propertyName]
-            value2 = obj2[propertyName]
+export const sortByKey = (array, key, ascending = true) => {
+    return array.sort((a, b) => {
+        if (a[key] < b[key]) {
+            return ascending ? -1 : 1;
         }
-        if (value1 < value2) {
-            return isAscending * -1
-        } else if (value1 > value2) {
-            return isAscending * 1
-        } else {
-            return 0
+        if (a[key] > b[key]) {
+            return ascending ? 1 : -1;
         }
-    }
+        return 0; // 如果值相等，则保持原有顺序
+    });
 }
 
 // 判断是否为汉字
@@ -46,32 +28,13 @@ export const isChineseCharacter = (char) => {
  * @param obj
  * @returns
  */
-function isNumber(obj) {
+export const isNumber = (obj) => {
     if (parseFloat(obj).toString() == "NaN") {
         return false;
     }
     return true;
 }
 
-/**
- * 比较两个数字数组
- *
- * @param numberArray1
- * @param numberArray2
- */
-function compareNumberArray(numberArray1, numberArray2) {
-    for (let i = 0; i < numberArray1.length; i++) {
-        if (numberArray2.length < i + 1) { // 此时数字数组2比1短，直接返回
-            return 1;
-        }
-        let compareResult = parseInt(numberArray1[i]) - parseInt(numberArray2[i]);
-        if (compareResult != 0) {
-            return compareResult;
-        }
-    }
-    // 说明数组1比数组2短，返回小于
-    return -1;
-}
 /**
  * 解析json字符串
  * @author Ash
