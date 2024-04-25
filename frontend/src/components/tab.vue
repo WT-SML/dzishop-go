@@ -197,7 +197,7 @@ defineExpose({
 						? state.painter?.debug.isLeftMousePressed.value
 							? 'cursor:grabbing'
 							: 'cursor:grab'
-						: ''
+						: 'cursor:crosshair'
 				"
 			></div>
 			<!-- 标注列表 -->
@@ -210,11 +210,11 @@ defineExpose({
 				}`"
 			>
 				<div
-					:class="`flex-shrink-0 border-b px-10px py-3px border-[#${
+					:class="`flex-shrink-0 border-b px-10px py-3px font-bold border-[#${
 						isDark ? '2D313A' : 'dfdfdf'
 					}]`"
 				>
-					标注列表
+					标注
 				</div>
 				<div class="flex-grow overflow-x-hidden overflow-y-auto">
 					<div
@@ -264,7 +264,7 @@ defineExpose({
 						@click="state.painter.state.mode = state.painter.state.tools.RECT"
 					>
 						<div
-							class="i-streamline:interface-geometric-square-square-geometric-design-shape-shapes text-20px"
+							class="i-streamline:interface-geometric-square-square-geometric-design-shape-shapes"
 						></div>
 					</div>
 				</template>
@@ -284,7 +284,7 @@ defineExpose({
 						"
 					>
 						<div
-							class="i-streamline:interface-geometric-pentagon-pentagon-design-geometric-shape-shapes text-21px"
+							class="i-streamline:interface-geometric-pentagon-pentagon-design-geometric-shape-shapes"
 						></div>
 					</div>
 				</template>
@@ -302,7 +302,7 @@ defineExpose({
 						@click="state.painter.state.mode = state.painter.state.tools.CIRCLE"
 					>
 						<div
-							class="i-streamline:interface-geometric-circle-geometric-circle-round-design-shape-shapes text-21px"
+							class="i-streamline:interface-geometric-circle-geometric-circle-round-design-shape-shapes"
 						></div>
 					</div>
 				</template>
@@ -321,7 +321,7 @@ defineExpose({
 							state.painter.state.mode = state.painter.state.tools.ELLIPSE
 						"
 					>
-						<div class="i-tabler:oval-vertical text-28px"></div>
+						<div class="i-tabler:oval-vertical"></div>
 					</div>
 				</template>
 				椭圆
@@ -355,7 +355,7 @@ defineExpose({
 							state.painter.state.mode = state.painter.state.tools.CLOSED_PATH
 						"
 					>
-						<div class="i-tdesign:curve text-23px"></div>
+						<div class="i-tdesign:curve"></div>
 					</div>
 				</template>
 				闭合曲线
@@ -371,7 +371,7 @@ defineExpose({
 						]"
 						@click="state.painter.state.mode = state.painter.state.tools.LINE"
 					>
-						<div class="i-ph:line-segment-fill text-23px"></div>
+						<div class="i-ph:line-segment-fill"></div>
 					</div>
 				</template>
 				直线
@@ -389,9 +389,7 @@ defineExpose({
 							state.painter.state.mode = state.painter.state.tools.ARROW_LINE
 						"
 					>
-						<div
-							class="i-material-symbols:arrow-right-alt-rounded text-26px"
-						></div>
+						<div class="i-material-symbols:arrow-right-alt-rounded"></div>
 					</div>
 				</template>
 				箭头
@@ -407,7 +405,7 @@ defineExpose({
 						]"
 						@click="state.painter.state.mode = state.painter.state.tools.POINT"
 					>
-						<div class="i-material-symbols:add-location-alt text-21px"></div>
+						<div class="i-material-symbols:add-location-alt"></div>
 					</div>
 				</template>
 				点
@@ -415,24 +413,25 @@ defineExpose({
 		</div>
 		<!-- 倍率工具栏 -->
 		<div
-			:class="`zoom-ratio absolute bottom-0 bg-[#${
-				isDark ? '2D313A' : 'F8F8F8'
-			}] px-5px`"
+			:class="`zoom-ratio right-0 absolute`"
 			:style="{
-				left: `${state.navigatorSize.width}px`,
-				height: `${state.navigatorSize.height}px`,
+				bottom: `${state.navigatorSize.height + 50}px`,
+				width: `${state.navigatorSize.width}px`,
 			}"
 			title="缩放倍率"
 		>
 			<n-slider
 				v-model:value="state.zoomRatio"
 				class="!p-0"
-				vertical
 				:step="0.1"
 				:max="80"
 				:min="1"
 				@update:value="handleZoomRatioUpdate"
-			/>
+			>
+				<templete #thumb>
+					<div class="i-ion:add" />
+				</templete>
+			</n-slider>
 		</div>
 		<!-- 备注、颜色询问框 -->
 		<n-modal
@@ -484,9 +483,9 @@ defineExpose({
 	position: absolute;
 	left: 50%;
 	transform: translateX(-50%);
-	bottom: 0;
+	bottom: 5px;
 	display: flex;
-	padding: 5px 10px;
+	border-radius: 4px;
 	.tool-item {
 		width: 30px;
 		height: 30px;
@@ -494,7 +493,7 @@ defineExpose({
 		justify-content: center;
 		align-items: center;
 		cursor: pointer;
-		font-size: 25px;
+		font-size: 14px;
 		&:not(:last-child) {
 			margin-right: 5px;
 		}
@@ -536,7 +535,8 @@ defineExpose({
 html {
 	.tools {
 		.tool-active {
-			background-color: #a1f5cb;
+			background-color: #005fb8;
+			color: #fff;
 		}
 	}
 }

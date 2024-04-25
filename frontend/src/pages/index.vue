@@ -114,9 +114,9 @@ const state = reactive(initState)
 // 监听需要缓存的项
 watch(
 	() => state,
-	(newVal) => {
+	_.debounce(function (newVal) {
 		localStorage.setItem('state', JSON.stringify(state))
-	},
+	}, 500),
 	{
 		deep: true,
 	},
@@ -342,7 +342,7 @@ onMounted(async () => {
 				:style="{ width: compotedResourceManagerPanelWidth }"
 			>
 				<div
-					:class="`h-30px flex items-center flex-shrink-0 px-20px ${
+					:class="`font-bold h-30px flex items-center flex-shrink-0 px-20px ${
 						isDark ? '' : 'border-b border-[#dfdfdf]'
 					}`"
 				>
@@ -373,9 +373,9 @@ onMounted(async () => {
 				<!-- 窗口大小调整器 -->
 				<div
 					ref="frameSizeSettingRef"
-					class="frame-size-setting absolute right-[-3px] top-0 z-1 h-full w-6px select-none hover:bg-[#2FA968]"
+					class="frame-size-setting absolute right-[-3px] top-0 z-1 h-full w-4px select-none hover:bg-[#005FB8]"
 					:style="{
-						backgroundColor: isFrameSizeSettingRefMousePressed ? '#2FA968' : '',
+						backgroundColor: isFrameSizeSettingRefMousePressed ? '#005FB8' : '',
 					}"
 				></div>
 			</div>
@@ -414,7 +414,7 @@ onMounted(async () => {
 								state.activeTabKey === item.key
 									? `bg-[#${isDark ? '2D313A' : 'FFFFFF'}] !text-[#${
 											isDark ? 'dcdcdc' : '3b3b3b'
-										}] ${isDark ? '' : 'border-t-1px border-t-[#2FA968]'}`
+										}] ${isDark ? '' : 'border-t-1px border-t-[#005FB8]'}`
 									: ``,
 							]"
 							:title="item.key"

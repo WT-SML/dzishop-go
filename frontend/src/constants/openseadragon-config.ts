@@ -1,7 +1,7 @@
 export const defaultOsdConfig = {
 	crossOriginPolicy: 'Anonymous', // 有效值为“Anonymous”、“use-credentials”和 false 。如果为 false，画布请求将不会使用 CORS，并且画布将被污染。
 	showNavigator: true, // 显示小地图
-	navigatorPosition: 'BOTTOM_LEFT', // 设置缩略图的位置
+	navigatorPosition: 'BOTTOM_RIGHT', // 设置缩略图的位置
 	showNavigationControl: false, // 设置为false以防止出现默认导航控件。 注意，如果设置为false，由选项zoomInButton、zoomOutButton等设置的自定义按钮将呈现为非活动状态。
 	animationTime: 0.3, // 动画过度时间
 	defaultZoomLevel: 0, // 第一次打开图像或单击主页按钮时使用的缩放级别。 如果为0，则调整以适合查看器。

@@ -136,12 +136,16 @@ const menu = [
 			{
 				label: '官网',
 				key: '官网',
-				onClick: () => {},
+				onClick: () => {
+					runtime.BrowserOpenURL('https://dzishop.sumoli.com')
+				},
 			},
 			{
 				label: 'Github',
 				key: 'Github',
-				onClick: () => {},
+				onClick: () => {
+					runtime.BrowserOpenURL('https://github.com/WT-SML/dzishop-go')
+				},
 			},
 			{
 				label: '更新日志',
@@ -238,7 +242,7 @@ onMounted(() => {
 				</n-dropdown>
 			</div>
 		</div>
-		<div :class="`${isDark ? 'text-[#C5C5C5]' : 'text-[#333639]'}`">
+		<div :class="`text-14px ${isDark ? 'text-[#C5C5C5]' : 'text-[#333639]'}`">
 			<div
 				:class="`titlebar-button hover:${isDark ? 'bg-[#40444A]' : 'bg-[#D7D7D7]'}`"
 				@click="runtime.WindowMinimise()"
