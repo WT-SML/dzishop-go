@@ -6,6 +6,9 @@ import path from 'path'
 import { initNavigatorSubline } from '~/tools/viewer'
 import { defaultOsdConfig } from '@/constants/openseadragon-config'
 import { isDark, toggleDark } from 'vue-dark-switch'
+import { commonProvide } from '~/tools'
+import emitter from '~/tools/emitter'
+import { PROVIDE_TAG } from '~/constants/evt-name'
 
 const typeLabelMap = {
 	RECT: '矩形', // 矩形
@@ -129,7 +132,14 @@ onMounted(async () => {
 			viewer: state.viewer, // osd 查看器
 			shapes: state.shapes, // 需要渲染的形状
 			// 监听新增形状
-			onAdd: (shape) => {
+			onAdd: async (shape) => {
+				const provideId = Date.now()
+				emitter.emit(PROVIDE_TAG, {
+					provideId,
+				})
+				const res: any = await commonProvide(provideId)
+				if (!res.result) return
+				shape.tag = res.result
 				state.shapes.push(shape)
 			},
 			// 监听删除形状
@@ -189,20 +199,239 @@ defineExpose({
 		</div>
 		<div v-else class="h-full w-full flex">
 			<!-- osd 画布 -->
-			<div
-				ref="osdRef"
-				class="osd flex-grow"
-				:style="
-					state.painter?.state.mode === state.painter?.state.tools.MOVE
-						? state.painter?.debug.isLeftMousePressed.value
-							? 'cursor:grabbing'
-							: 'cursor:grab'
-						: 'cursor:crosshair'
-				"
-			></div>
+			<div class="flex-grow relative">
+				<div
+					ref="osdRef"
+					class="osd"
+					:style="
+						state.painter?.state.mode === state.painter?.state.tools.MOVE
+							? state.painter?.debug.isLeftMousePressed.value
+								? 'cursor:grabbing'
+								: 'cursor:grab'
+							: 'cursor:crosshair'
+					"
+				></div>
+				<!-- 绘图工具栏 -->
+				<div
+					v-if="state.painter"
+					:class="`tools bg-[#${isDark ? '2d313a' : 'F8F8F8'}]`"
+				>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.MOVE
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.MOVE
+								"
+							>
+								<div class="i-ion:arrow-move"></div>
+							</div>
+						</template>
+						移动
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.RECT
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.RECT
+								"
+							>
+								<div
+									class="i-streamline:interface-geometric-square-square-geometric-design-shape-shapes"
+								></div>
+							</div>
+						</template>
+						矩形
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.POLYGON
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.POLYGON
+								"
+							>
+								<div
+									class="i-streamline:interface-geometric-pentagon-pentagon-design-geometric-shape-shapes"
+								></div>
+							</div>
+						</template>
+						多边形
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.CIRCLE
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.CIRCLE
+								"
+							>
+								<div
+									class="i-streamline:interface-geometric-circle-geometric-circle-round-design-shape-shapes"
+								></div>
+							</div>
+						</template>
+						圆
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.ELLIPSE
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.ELLIPSE
+								"
+							>
+								<div class="i-tabler:oval-vertical"></div>
+							</div>
+						</template>
+						椭圆
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.PATH
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.PATH
+								"
+							>
+								<div class="i-ph:wave-sine-bold"></div>
+							</div>
+						</template>
+						自由曲线
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode ===
+									state.painter.state.tools.CLOSED_PATH
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode =
+										state.painter.state.tools.CLOSED_PATH
+								"
+							>
+								<div class="i-tdesign:curve"></div>
+							</div>
+						</template>
+						闭合曲线
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.LINE
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.LINE
+								"
+							>
+								<div class="i-ph:line-segment-fill"></div>
+							</div>
+						</template>
+						直线
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode ===
+									state.painter.state.tools.ARROW_LINE
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode =
+										state.painter.state.tools.ARROW_LINE
+								"
+							>
+								<div class="i-material-symbols:arrow-right-alt-rounded"></div>
+							</div>
+						</template>
+						箭头
+					</n-tooltip>
+					<n-tooltip trigger="hover">
+						<template #trigger>
+							<div
+								:class="[
+									'tool-item',
+									state.painter.state.mode === state.painter.state.tools.POINT
+										? 'tool-active'
+										: '',
+								]"
+								@click="
+									state.painter.state.mode = state.painter.state.tools.POINT
+								"
+							>
+								<div class="i-material-symbols:add-location-alt"></div>
+							</div>
+						</template>
+						点
+					</n-tooltip>
+				</div>
+				<!-- 倍率工具栏 -->
+				<div
+					:class="`zoom-ratio right-0 absolute`"
+					:style="{
+						bottom: `${state.navigatorSize.height + 8}px`,
+						width: `${state.navigatorSize.width}px`,
+					}"
+					title="缩放倍率"
+				>
+					<n-slider
+						v-model:value="state.zoomRatio"
+						class="!p-0"
+						:step="0.1"
+						:max="80"
+						:min="1"
+						@update:value="handleZoomRatioUpdate"
+					>
+						<templete #thumb>
+							<div class="i-ion:add" />
+						</templete>
+					</n-slider>
+				</div>
+			</div>
 			<!-- 标注列表 -->
 			<div
-				v-if="state.shapes.length"
 				:class="`shape-list flex-shrink-0 w-200px flex flex-col bg-[#${
 					isDark ? '21252B' : 'f8f8f8'
 				}] ${
@@ -217,221 +446,20 @@ defineExpose({
 					标注
 				</div>
 				<div class="flex-grow overflow-x-hidden overflow-y-auto">
+					<n-empty v-if="!state.shapes.length" class="mt-10" />
 					<div
 						v-for="(item, i) in state.shapes"
 						:key="item.id"
 						:class="`px-10px py-3px cursor-pointer hover:bg-[#${
 							isDark ? '2B4140' : 'E1EFE8'
 						}]`"
-						:title="item.remark || `${typeLabelMap[item.type]}-${item.id}`"
+						:title="`${item.tag}`"
 						@click="handleShapeClick(item)"
 					>
-						{{ item.remark || `${typeLabelMap[item.type]}-${item.id}` }}
+						{{ `${item.tag}` }}
 					</div>
 				</div>
 			</div>
-		</div>
-		<!-- 绘图工具栏 -->
-		<div
-			v-if="state.painter"
-			:class="`tools bg-[#${isDark ? '2d313a' : 'F8F8F8'}]`"
-		>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.MOVE
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.MOVE"
-					>
-						<div class="i-ion:arrow-move"></div>
-					</div>
-				</template>
-				移动
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.RECT
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.RECT"
-					>
-						<div
-							class="i-streamline:interface-geometric-square-square-geometric-design-shape-shapes"
-						></div>
-					</div>
-				</template>
-				矩形
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.POLYGON
-								? 'tool-active'
-								: '',
-						]"
-						@click="
-							state.painter.state.mode = state.painter.state.tools.POLYGON
-						"
-					>
-						<div
-							class="i-streamline:interface-geometric-pentagon-pentagon-design-geometric-shape-shapes"
-						></div>
-					</div>
-				</template>
-				多边形
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.CIRCLE
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.CIRCLE"
-					>
-						<div
-							class="i-streamline:interface-geometric-circle-geometric-circle-round-design-shape-shapes"
-						></div>
-					</div>
-				</template>
-				圆
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.ELLIPSE
-								? 'tool-active'
-								: '',
-						]"
-						@click="
-							state.painter.state.mode = state.painter.state.tools.ELLIPSE
-						"
-					>
-						<div class="i-tabler:oval-vertical"></div>
-					</div>
-				</template>
-				椭圆
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.PATH
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.PATH"
-					>
-						<div class="i-ph:wave-sine-bold"></div>
-					</div>
-				</template>
-				自由曲线
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.CLOSED_PATH
-								? 'tool-active'
-								: '',
-						]"
-						@click="
-							state.painter.state.mode = state.painter.state.tools.CLOSED_PATH
-						"
-					>
-						<div class="i-tdesign:curve"></div>
-					</div>
-				</template>
-				闭合曲线
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.LINE
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.LINE"
-					>
-						<div class="i-ph:line-segment-fill"></div>
-					</div>
-				</template>
-				直线
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.ARROW_LINE
-								? 'tool-active'
-								: '',
-						]"
-						@click="
-							state.painter.state.mode = state.painter.state.tools.ARROW_LINE
-						"
-					>
-						<div class="i-material-symbols:arrow-right-alt-rounded"></div>
-					</div>
-				</template>
-				箭头
-			</n-tooltip>
-			<n-tooltip trigger="hover">
-				<template #trigger>
-					<div
-						:class="[
-							'tool-item',
-							state.painter.state.mode === state.painter.state.tools.POINT
-								? 'tool-active'
-								: '',
-						]"
-						@click="state.painter.state.mode = state.painter.state.tools.POINT"
-					>
-						<div class="i-material-symbols:add-location-alt"></div>
-					</div>
-				</template>
-				点
-			</n-tooltip>
-		</div>
-		<!-- 倍率工具栏 -->
-		<div
-			:class="`zoom-ratio right-0 absolute`"
-			:style="{
-				bottom: `${state.navigatorSize.height + 50}px`,
-				width: `${state.navigatorSize.width}px`,
-			}"
-			title="缩放倍率"
-		>
-			<n-slider
-				v-model:value="state.zoomRatio"
-				class="!p-0"
-				:step="0.1"
-				:max="80"
-				:min="1"
-				@update:value="handleZoomRatioUpdate"
-			>
-				<templete #thumb>
-					<div class="i-ion:add" />
-				</templete>
-			</n-slider>
 		</div>
 		<!-- 备注、颜色询问框 -->
 		<n-modal
@@ -502,12 +530,11 @@ defineExpose({
 		border-radius: 4px;
 	}
 }
-.zoom-ratio {
-}
 </style>
 
 <style lang="scss">
 .osd {
+	background-color: #edf5fb;
 	.openseadragon-container {
 		div {
 			&:nth-child(5) {
@@ -527,9 +554,14 @@ defineExpose({
 	}
 }
 .zoom-ratio {
+	.n-slider {
+		.n-slider-rail {
+			height: 20px;
+			background-color: #fff;
+		}
+	}
 	.n-slider-handle {
-		width: 12px !important;
-		height: 12px !important;
+		opacity: 0;
 	}
 }
 html {

@@ -40,6 +40,9 @@ devDependencies:
   '@iconify-json/ph':
     specifier: ^1.1.11
     version: 1.1.11
+  '@iconify-json/ri':
+    specifier: ^1.1.20
+    version: 1.1.20
   '@iconify-json/streamline':
     specifier: ^1.1.8
     version: 1.1.8
@@ -983,6 +986,12 @@ packages:
 
   /@iconify-json/ph@1.1.11:
     resolution: {integrity: sha512-izLvLZrU7WM03zNwNWNrAySv3i45hM3D3K6USjCGBSQMUG0HB8zxwrMf4O0leDrganmuQBH7Z0DWTgyH1ET/fg==}
+    dependencies:
+      '@iconify/types': 2.0.0
+    dev: true
+
+  /@iconify-json/ri@1.1.20:
+    resolution: {integrity: sha512-yScIGjLFBCJKWKskQTWRjNI2Awoq+VRDkRxEsCQvSfdz41n+xkRtFG2K6J1OVI90ClRHfjFC8VJ2+WzxxyFjTQ==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true

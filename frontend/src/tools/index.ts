@@ -1,3 +1,6 @@
+import emitter from "~/tools/emitter"
+import { COMMON_PROVIDE } from '~/constants/evt-name'
+
 /**
  * 对数组按key排序
  * @author Ash
@@ -43,3 +46,18 @@ export const isNumber = (obj) => {
 export const p = (jsonstr) => {
     return JSON.parse(jsonstr)
 }
+/**
+ * 提供一个东西
+ * @author Ash
+ * @param {provideId}
+ * @returns {Promise}
+ */
+export const commonProvide = (provideId) =>
+    new Promise((resolve, reject) => {
+        emitter.on(COMMON_PROVIDE, (payload: any) => {
+            if (payload.provideId === provideId) {
+                emitter.off(COMMON_PROVIDE)
+                resolve(payload)
+            }
+        })
+    })

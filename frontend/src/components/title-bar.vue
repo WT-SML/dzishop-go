@@ -9,6 +9,7 @@ import {
 	MENU_OPEN_FILE,
 	MENU_EXPORT,
 } from '~/constants/evt-name'
+import setting from '~/components/setting.vue'
 
 const keys = useMagicKeys()
 
@@ -53,7 +54,9 @@ const menu = [
 				label: '设置',
 				key: '设置',
 				accelerator: 'Ctrl+.',
-				onClick: () => {},
+				onClick: () => {
+					state.isSettingVisible = true
+				},
 			},
 			{ type: 'divider' },
 			{
@@ -210,6 +213,11 @@ const listenShortcut = () => {
 		})
 	}
 }
+
+const state = reactive({
+	isSettingVisible: false,
+})
+
 onMounted(() => {
 	listenShortcut()
 })
@@ -263,6 +271,10 @@ onMounted(() => {
 			</div>
 		</div>
 	</div>
+	<setting
+		:isVisible="state.isSettingVisible"
+		@close="state.isSettingVisible = false"
+	/>
 </template>
 
 <style lang="scss" scoepd>
